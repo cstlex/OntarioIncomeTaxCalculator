@@ -18,12 +18,12 @@ export function Card({
       className={`rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900 ${className}`}
     >
       {(title || actions) && (
-        <header className="mb-4 flex flex-wrap items-start justify-between gap-2">
-          <div>
+        <header className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
             {title && <h2 className="text-base font-semibold tracking-tight">{title}</h2>}
             {subtitle && <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">{subtitle}</p>}
           </div>
-          {actions}
+          {actions && <div className="shrink-0">{actions}</div>}
         </header>
       )}
       {children}
@@ -327,5 +327,33 @@ export function TrashIcon() {
         clipRule="evenodd"
       />
     </svg>
+  );
+}
+
+/** Two-step destructive button: first click asks, second click (within 4s) confirms. */
+export function ClearAllButton({ onClear, label = 'Clear all' }: { onClear: () => void; label?: string }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (armed) {
+          setArmed(false);
+          onClear();
+        } else {
+          setArmed(true);
+        }
+      }}
+      className={`text-sm font-medium underline-offset-2 hover:underline ${
+        armed ? 'text-red-700 dark:text-red-400' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+      }`}
+    >
+      {armed ? 'Click again to clear' : label}
+    </button>
   );
 }

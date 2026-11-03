@@ -12,6 +12,7 @@ import { newId, withYear } from '../state';
 import { money } from '../format';
 import {
   Card,
+  ClearAllButton,
   DateInput,
   Field,
   IconButton,
@@ -167,6 +168,7 @@ export function InputPanel({ input, setInput, onReset }: { input: CalculatorInpu
       <Card
         title="RSU vests"
         subtitle="Vest value (FMV × shares) is employment income on the paycheck after the vest date."
+        actions={input.rsuVests.length > 0 && <ClearAllButton onClear={() => set('rsuVests', [])} />}
       >
         <div className="mb-3 flex flex-wrap items-center gap-3">
           <Segmented
@@ -236,7 +238,11 @@ export function InputPanel({ input, setInput, onReset }: { input: CalculatorInpu
         </div>
       </Card>
 
-      <Card title="Cash bonuses" subtitle="Withheld with the CRA bonus method.">
+      <Card
+        title="Cash bonuses"
+        subtitle="Withheld with the CRA bonus method."
+        actions={input.bonuses.length > 0 && <ClearAllButton onClear={() => set('bonuses', [])} />}
+      >
         <LumpList
           items={input.bonuses}
           onChange={(v) => set('bonuses', v)}
