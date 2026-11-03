@@ -79,3 +79,7 @@ dependencies; all yearly rates live in `src/tax/config.ts`.
 ## Deployment
 
 Pushing to `master` runs `.github/workflows/deploy.yml`, which tests, builds and deploys `dist/` to GitHub Pages.
+
+## License
+
+[MIT](LICENSE)
