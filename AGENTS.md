@@ -44,7 +44,8 @@ src/
     config.ts          All rates, thresholds and constants per tax year
     annual.ts          Annual return: T1 + ON428 (brackets, credits, surtax, reduction, LIFT, health premium)
     payroll.ts         Per-paycheck simulation (CRA T4127 payroll formulas, bonus method, CPP/CPP2/EI caps)
-    calculator.ts      Combines payroll + annual: refund/owing, RSU analysis, paycheck phases
+    calculator.ts      Combines payroll + annual: refund/owing, RSU analysis, paycheck phases,
+                       retirement contributions ($ or % of salary, employer match into group RRSP or DPSP)
     tax.test.ts        Tests with hand-checked expected values
   components/          UI (Card, inputs, summary, phases, chart, RSU panel, breakdown, table)
   state.ts             Defaults + localStorage persistence
@@ -64,6 +65,11 @@ scripts/generate-icons.mjs   Icon generator (sharp); output is committed
   tax reduction amount, CPP YMPE / YAMPE / rates, EI rate / maximum insurable earnings. The Ontario Health
   Premium and LIFT thresholds are not indexed.
 - Rounding: per-paycheck amounts are rounded to cents; CPP/CPP2/EI must total exactly the annual maximum.
+- Employer group-RRSP match = taxable benefit (income + pensionable + insurable unless withdrawals are restricted)
+  offset by an equal RRSP deduction, so it changes CPP/EI but not income tax. Employer DPSP / RPP contributions
+  are not taxable and have no CPP/EI.
+- Saved inputs live in localStorage (`src/state.ts`). When the input shape changes, migrate the old shape in
+  `load()` instead of dropping the user's data.
 - Payroll withholding follows T4127 (annualize × pay periods, K1/K2/K4 credits, F5 enhanced-CPP deduction,
   Ontario surtax V1, health premium V2, tax reduction S, bonus method for bonuses and RSU vests).
   Known simplifications: no TD1 claim amounts other than the basic personal amounts, no 53/27-pay years,

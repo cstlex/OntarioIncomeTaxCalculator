@@ -17,6 +17,9 @@ so your net pay changes during the year. RSU vests make it even more lumpy — a
   sell-to-cover withholding (CRA bonus method or a flat rate) is enough.
 - **Everything on the pay stub** — federal tax, Ontario tax, Ontario Health Premium, CPP, CPP2, EI, pension (RPP),
   group RRSP, union dues, taxable benefits and after-tax deductions (benefit premiums, ESPP, …).
+- **Retirement savings** — RPP and group RRSP contributions in dollars or as a % of salary, plus an employer match
+  (match rate, capped at a % of salary) into a group RRSP (taxable benefit + RRSP deduction, so CPP/EI apply) or a
+  DPSP (not taxed, no CPP/EI).
 - **Cash bonuses** withheld with the CRA bonus method.
 - **Annual return** — federal and Ontario tax (brackets, credits, surtax, Ontario tax reduction, LIFT credit,
   health premium) compared with what was withheld: estimated refund or balance owing. Personal RRSP contributions included.
@@ -52,6 +55,8 @@ employees; CPP follows, and CPP2 keeps going until $85,000.
 - Single filer, Ontario resident all year, employment income only. No spouse/dependant credits, other income types
   or refundable credits such as the Canada Workers Benefit.
 - Payroll uses the default TD1 claim (basic personal amounts). 53-week / 27-pay years are not modelled.
+- Percentages for RPP / group RRSP / employer match are of base salary (bonuses and RSUs excluded). RRSP deductions
+  assume you have enough contribution room.
 - RSU vest value is taxed on the first paycheck on or after the vest date. Whether vests are subject to EI and
   whether CPP/EI on vests is covered by sell-to-cover can be toggled, since employers differ.
 - Estimates only — this is not tax advice.

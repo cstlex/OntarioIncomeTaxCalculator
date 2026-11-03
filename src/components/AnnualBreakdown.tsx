@@ -39,16 +39,24 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export function AnnualBreakdown({ result }: { result: CalculatorResult }) {
-  const { annual, deductions, payroll } = result;
+  const { annual, deductions, payroll, retirement } = result;
+  const r = retirement.annual;
   return (
     <Card title="Annual tax return" subtitle="What you owe for the year (T1 + ON428), single filer with employment income.">
       <div className="grid gap-6 md:grid-cols-3">
         <Section title="Income">
           <Line label="Employment income" value={annual.employmentIncome} />
+          {deductions.employerRrsp > 0 && (
+            <Line label="incl. employer RRSP match" value={deductions.employerRrsp} muted />
+          )}
           <Line label="Enhanced CPP / CPP2 deduction" value={annual.enhancedCppDeduction} sign="−" />
           {deductions.rpp > 0 && <Line label="RPP contributions" value={deductions.rpp} sign="−" />}
-          {deductions.groupRrsp + deductions.personalRrsp > 0 && (
-            <Line label="RRSP deduction" value={deductions.groupRrsp + deductions.personalRrsp} sign="−" />
+          {deductions.groupRrsp + deductions.employerRrsp + deductions.personalRrsp > 0 && (
+            <Line
+              label="RRSP deduction"
+              value={deductions.groupRrsp + deductions.employerRrsp + deductions.personalRrsp}
+              sign="−"
+            />
           )}
           {deductions.unionDues > 0 && <Line label="Union dues" value={deductions.unionDues} sign="−" />}
           <Line label="Taxable income" value={annual.taxableIncome} strong />
@@ -71,7 +79,7 @@ export function AnnualBreakdown({ result }: { result: CalculatorResult }) {
           <Line label="Ontario tax" value={annual.ontario.tax + annual.ontario.healthPremium} strong />
         </Section>
       </div>
-      <div className="mt-6 grid gap-6 border-t border-zinc-200 pt-4 md:grid-cols-2 dark:border-zinc-800">
+      <div className="mt-6 grid gap-6 border-t border-zinc-200 pt-4 md:grid-cols-3 dark:border-zinc-800">
         <Section title="Withheld on paychecks">
           <Line label="Federal tax" value={payroll.totals.tax.federal} />
           <Line label="Ontario tax" value={payroll.totals.tax.ontario} />
@@ -88,6 +96,21 @@ export function AnnualBreakdown({ result }: { result: CalculatorResult }) {
             strong
           />
           <Line label="CPP / CPP2 / EI paid" value={annual.cpp1 + annual.cpp2 + annual.ei} muted />
+        </Section>
+        <Section title="Retirement savings">
+          <Line label="Your RPP" value={r.rpp} />
+          <Line label="Your group RRSP" value={r.groupRrsp} />
+          <Line
+            label={retirement.plan === 'dpsp' ? 'Employer match (DPSP)' : 'Employer match (RRSP)'}
+            value={r.employerMatch}
+          />
+          <Line label="Personal RRSP" value={r.personalRrsp} />
+          <Line label="Total saved" value={r.total} strong />
+          <Line
+            label="RRSP deduction used"
+            value={deductions.groupRrsp + deductions.employerRrsp + deductions.personalRrsp}
+            muted
+          />
         </Section>
       </div>
     </Card>

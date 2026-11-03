@@ -12,6 +12,13 @@ export function PaycheckTable({ payroll }: { payroll: PayrollResult }) {
   const rows = open ? payroll.periods : [];
   const th = 'px-2 py-2 text-right font-medium whitespace-nowrap';
   const td = 'px-2 py-1.5 text-right whitespace-nowrap';
+  // "#" and "Date" stay pinned while the table scrolls sideways. Sticky cells need an opaque
+  // background, and a right-edge line separates them from the scrolling columns.
+  const pinNo = 'sticky left-0 z-10 w-10 min-w-10 px-2 text-left';
+  const pinDate =
+    'sticky left-10 z-10 min-w-[6.5rem] px-2 text-left shadow-[inset_-1px_0_0_var(--color-zinc-200)] dark:shadow-[inset_-1px_0_0_var(--color-zinc-800)]';
+  const plainBg = 'bg-white dark:bg-zinc-900';
+  const eventBg = 'bg-brand-50 dark:bg-[#2a1715]';
   return (
     <Card
       title="Paycheck table"
@@ -31,8 +38,8 @@ export function PaycheckTable({ payroll }: { payroll: PayrollResult }) {
         <table className="tabular w-full min-w-[56rem] text-sm">
           <thead className="border-b border-zinc-200 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
             <tr>
-              <th className="px-2 py-2 text-left font-medium">#</th>
-              <th className="px-2 py-2 text-left font-medium">Date</th>
+              <th className={`${pinNo} ${plainBg} py-2 font-medium`}>#</th>
+              <th className={`${pinDate} ${plainBg} py-2 font-medium`}>Date</th>
               <th className={th}>Gross (cash)</th>
               {hasRsu && <th className={th}>RSU</th>}
               <th className={th}>CPP</th>
@@ -48,13 +55,17 @@ export function PaycheckTable({ payroll }: { payroll: PayrollResult }) {
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {rows.map((p) => {
-              const ev = p.events.map((e) => EVENT_LABEL[e.kind]).join(', ');
+              const bg = p.events.length ? eventBg : plainBg;
               return (
-                <tr key={p.index} className={p.events.length ? 'bg-brand-50/60 dark:bg-brand-700/10' : ''}>
-                  <td className="px-2 py-1.5 text-left text-zinc-500">{p.index + 1}</td>
-                  <td className="px-2 py-1.5 text-left whitespace-nowrap">
+                <tr key={p.index} className={bg}>
+                  <td className={`${pinNo} ${bg} py-1.5 text-zinc-500`}>{p.index + 1}</td>
+                  <td className={`${pinDate} ${bg} py-1.5 whitespace-nowrap`}>
                     {shortDate(p.date)}
-                    {ev && <span className="ml-2 text-xs font-medium text-brand-600 dark:text-brand-500">{ev}</span>}
+                    {p.events.map((e) => (
+                      <span key={e.kind} className="block text-[11px] leading-tight font-medium text-brand-600 dark:text-brand-500">
+                        {EVENT_LABEL[e.kind]}
+                      </span>
+                    ))}
                   </td>
                   <td className={td}>{money(p.regularGross + p.bonus)}</td>
                   {hasRsu && <td className={td}>{p.rsu ? money(p.rsu) : '—'}</td>}
@@ -73,9 +84,8 @@ export function PaycheckTable({ payroll }: { payroll: PayrollResult }) {
           </tbody>
           <tfoot className="border-t-2 border-zinc-200 font-semibold dark:border-zinc-700">
             <tr>
-              <td className="px-2 py-2 text-left" colSpan={2}>
-                Year total
-              </td>
+              <td className={`${pinNo} ${plainBg} py-2`}>Total</td>
+              <td className={`${pinDate} ${plainBg} py-2`}>{payroll.periods.length} pays</td>
               <td className={td}>{money(t.regularGross + t.bonus)}</td>
               {hasRsu && <td className={td}>{money(t.rsu)}</td>}
               <td className={td}>{money(t.cpp)}</td>

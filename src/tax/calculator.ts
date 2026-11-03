@@ -5,23 +5,104 @@
 import { getTaxYear, round2 } from './config';
 import { computeAnnualTax, marginalRates, type AnnualResult } from './annual';
 import {
+  PERIODS_PER_YEAR,
   simulatePayroll,
   type LumpSum,
   type PayFrequency,
   type PayPeriod,
   type PayrollEvent,
   type PayrollResult,
-  type PerPayDeductions,
 } from './payroll';
+
+/** A per-paycheck contribution entered either in dollars or as a % of base salary. */
+export interface ContributionSetting {
+  mode: 'amount' | 'percent';
+  /** Dollars per paycheck, or percent of base salary (5 = 5%). */
+  value: number;
+}
+
+export interface RetirementInput {
+  /** Registered pension plan (pre-tax). */
+  rpp: ContributionSetting;
+  /** Your group RRSP contribution through payroll (pre-tax). */
+  groupRrsp: ContributionSetting;
+  /** Employer match on your group RRSP contribution. */
+  match: {
+    enabled: boolean;
+    /** Percent of your group RRSP contribution the employer adds (100 = dollar for dollar). */
+    rate: number;
+    /** Maximum employer contribution as a percent of base salary (0 = no limit). */
+    capPercent: number;
+    /**
+     * Where the employer money goes. Group RRSP: taxable benefit + RRSP deduction (CPP/EI apply).
+     * DPSP: not taxable and no CPP/EI.
+     */
+    plan: 'rrsp' | 'dpsp';
+    /** Group RRSP match is insurable unless withdrawals are restricted until retirement/termination. */
+    insurable: boolean;
+  };
+  /** RRSP contributions made outside payroll (deducted on the return only). */
+  personalRrsp: number;
+}
+
+export interface OtherPerPay {
+  /** Union / professional dues (pre-tax). */
+  unionDues: number;
+  /** Non-cash taxable benefits (taxable + pensionable, not insurable). */
+  taxableBenefits: number;
+  /** After-tax deductions. */
+  postTax: number;
+}
+
+export interface ResolvedRetirement {
+  perPay: { rpp: number; groupRrsp: number; employerMatch: number };
+  annual: { rpp: number; groupRrsp: number; employerMatch: number; personalRrsp: number; total: number };
+  plan: 'rrsp' | 'dpsp';
+}
+
+/** Converts % settings into dollars per paycheck and applies the employer match formula. */
+export function resolveRetirement(
+  retirement: RetirementInput,
+  annualSalary: number,
+  frequency: PayFrequency,
+): ResolvedRetirement {
+  const P = PERIODS_PER_YEAR[frequency];
+  const base = Math.max(0, annualSalary) / P;
+  const amount = (c: ContributionSetting) =>
+    round2(Math.max(0, c.mode === 'percent' ? (base * c.value) / 100 : c.value));
+  const rpp = amount(retirement.rpp);
+  const groupRrsp = amount(retirement.groupRrsp);
+  const m = retirement.match;
+  let employerMatch = 0;
+  if (m.enabled) {
+    const matched = (groupRrsp * Math.max(0, m.rate)) / 100;
+    const cap = m.capPercent > 0 ? (base * m.capPercent) / 100 : Infinity;
+    employerMatch = round2(Math.min(matched, cap));
+  }
+  const personalRrsp = Math.max(0, retirement.personalRrsp);
+  const annual = {
+    rpp: round2(rpp * P),
+    groupRrsp: round2(groupRrsp * P),
+    employerMatch: round2(employerMatch * P),
+    personalRrsp,
+  };
+  return {
+    perPay: { rpp, groupRrsp, employerMatch },
+    annual: {
+      ...annual,
+      total: round2(annual.rpp + annual.groupRrsp + annual.employerMatch + annual.personalRrsp),
+    },
+    plan: m.plan,
+  };
+}
 
 export interface CalculatorInput {
   year: number;
   annualSalary: number;
   frequency: PayFrequency;
   firstPayDate: string;
-  perPay: PerPayDeductions;
-  /** RRSP contributions made outside payroll (deducted on the return only). */
-  personalRrsp: number;
+  perPay: OtherPerPay;
+  retirement: RetirementInput;
   bonuses: Omit<LumpSum, 'type'>[];
   rsuVests: Omit<LumpSum, 'type'>[];
   /** Currency RSU vest values are entered in. */
@@ -70,7 +151,16 @@ export interface CalculatorResult {
   annual: AnnualResult;
   employmentIncome: number;
   insurableEarnings: number;
-  deductions: { rpp: number; groupRrsp: number; unionDues: number; personalRrsp: number; total: number };
+  deductions: {
+    rpp: number;
+    groupRrsp: number;
+    /** Employer group-RRSP contributions (included in income, then deducted). */
+    employerRrsp: number;
+    unionDues: number;
+    personalRrsp: number;
+    total: number;
+  };
+  retirement: ResolvedRetirement;
   /** Withheld − owed: positive = refund, negative = balance owing. */
   refund: number;
   /** Total of income tax + CPP + EI over gross income. */
@@ -94,12 +184,20 @@ function toLumps(input: CalculatorInput, includeRsu: boolean): LumpSum[] {
 
 function run(input: CalculatorInput, includeRsu: boolean) {
   const config = getTaxYear(input.year);
+  const retirement = resolveRetirement(input.retirement, input.annualSalary, input.frequency);
+  const employerRrsp = retirement.plan === 'rrsp' ? retirement.perPay.employerMatch : 0;
   const payroll = simulatePayroll(
     {
       annualSalary: input.annualSalary,
       frequency: input.frequency,
       firstPayDate: input.firstPayDate,
-      perPay: input.perPay,
+      perPay: {
+        ...input.perPay,
+        rpp: retirement.perPay.rpp,
+        groupRrsp: retirement.perPay.groupRrsp,
+        employerRrsp,
+        employerRrspInsurable: input.retirement.match.insurable,
+      },
       lumpSums: toLumps(input, includeRsu),
       rsuWithholding: input.rsuWithholding,
       rsuSubjectToEi: input.rsuSubjectToEi,
@@ -108,10 +206,15 @@ function run(input: CalculatorInput, includeRsu: boolean) {
     config,
   );
   const t = payroll.totals;
-  const employmentIncome = round2(t.regularGross + t.bonus + t.rsu + t.taxableBenefits);
-  const insurableEarnings = round2(t.regularGross + t.bonus + (input.rsuSubjectToEi ? t.rsu : 0));
-  const personalRrsp = Math.max(0, input.personalRrsp);
-  const deductionsTotal = round2(t.rpp + t.groupRrsp + t.unionDues + personalRrsp);
+  const employmentIncome = round2(t.regularGross + t.bonus + t.rsu + t.taxableBenefits + t.employerRrsp);
+  const insurableEarnings = round2(
+    t.regularGross +
+      t.bonus +
+      (input.rsuSubjectToEi ? t.rsu : 0) +
+      (input.retirement.match.insurable ? t.employerRrsp : 0),
+  );
+  const personalRrsp = retirement.annual.personalRrsp;
+  const deductionsTotal = round2(t.rpp + t.groupRrsp + t.employerRrsp + t.unionDues + personalRrsp);
   const annual = computeAnnualTax(
     { employmentIncome, cpp1: t.cpp, cpp2: t.cpp2, ei: t.ei, otherDeductions: deductionsTotal },
     config,
@@ -125,10 +228,12 @@ function run(input: CalculatorInput, includeRsu: boolean) {
     deductions: {
       rpp: t.rpp,
       groupRrsp: t.groupRrsp,
+      employerRrsp: t.employerRrsp,
       unionDues: t.unionDues,
       personalRrsp,
       total: deductionsTotal,
     },
+    retirement,
   };
 }
 
@@ -168,7 +273,7 @@ export function buildPhases(payroll: PayrollResult): PayPhase[] {
 
 export function calculate(input: CalculatorInput): CalculatorResult {
   const main = run(input, true);
-  const { config, payroll, annual, employmentIncome, insurableEarnings, deductions } = main;
+  const { config, payroll, annual, employmentIncome, insurableEarnings, deductions, retirement } = main;
   const t = payroll.totals;
 
   const refund = round2(t.totalTax - annual.totalIncomeTax);
@@ -208,6 +313,7 @@ export function calculate(input: CalculatorInput): CalculatorResult {
     employmentIncome,
     insurableEarnings,
     deductions,
+    retirement,
     refund,
     averageRate: gross > 0 ? (annual.totalIncomeTax + payrollTotal) / gross : 0,
     averageTaxRate: gross > 0 ? annual.totalIncomeTax / gross : 0,

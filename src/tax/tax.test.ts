@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TAX_2026, contributionMaximums } from './config';
 import { bracketTax, computeAnnualFromEarnings, federalBpa, ontarioHealthPremium } from './annual';
 import { payDates, simulatePayroll, type PayrollInput } from './payroll';
-import { calculate, type CalculatorInput } from './calculator';
+import { calculate, resolveRetirement, type CalculatorInput, type RetirementInput } from './calculator';
 
 const cfg = TAX_2026;
 
@@ -22,14 +22,23 @@ function payrollInput(overrides: Partial<PayrollInput> = {}): PayrollInput {
   };
 }
 
+function noRetirement(): RetirementInput {
+  return {
+    rpp: { mode: 'amount', value: 0 },
+    groupRrsp: { mode: 'amount', value: 0 },
+    match: { enabled: false, rate: 100, capPercent: 0, plan: 'rrsp', insurable: true },
+    personalRrsp: 0,
+  };
+}
+
 function calcInput(overrides: Partial<CalculatorInput> = {}): CalculatorInput {
   return {
     year: 2026,
     annualSalary: 150_000,
     frequency: 'biweekly',
     firstPayDate: '2026-01-02',
-    perPay: noDeductions,
-    personalRrsp: 0,
+    perPay: { unionDues: 0, taxableBenefits: 0, postTax: 0 },
+    retirement: noRetirement(),
     bonuses: [],
     rsuVests: [],
     rsuCurrency: 'CAD',
@@ -208,5 +217,73 @@ describe('RSU analysis', () => {
       }),
     );
     expect(res.rsu!.totalRsu).toBe(14_000);
+  });
+});
+
+describe('retirement contributions', () => {
+  const pct = (value: number) => ({ mode: 'percent' as const, value });
+
+  it('converts a percentage of salary into dollars per paycheck', () => {
+    const r = resolveRetirement({ ...noRetirement(), groupRrsp: pct(5) }, 120_000, 'biweekly');
+    expect(r.perPay.groupRrsp).toBe(230.77);
+    expect(r.annual.groupRrsp).toBeCloseTo(6_000, 0);
+  });
+
+  it('caps the employer match at a percentage of salary', () => {
+    const r = resolveRetirement(
+      { ...noRetirement(), groupRrsp: pct(6), match: { ...noRetirement().match, enabled: true, rate: 100, capPercent: 4 } },
+      130_000,
+      'biweekly',
+    );
+    expect(r.perPay.employerMatch).toBe(200); // 4% of $5,000
+    const half = resolveRetirement(
+      { ...noRetirement(), groupRrsp: pct(6), match: { ...noRetirement().match, enabled: true, rate: 50, capPercent: 0 } },
+      130_000,
+      'biweekly',
+    );
+    expect(half.perPay.employerMatch).toBe(150); // 50% of 6% of $5,000
+  });
+
+  it('charges CPP/EI but (almost) no income tax on a group RRSP match', () => {
+    const base = calcInput({ annualSalary: 50_000, retirement: { ...noRetirement(), groupRrsp: pct(5) } });
+    const matched = calcInput({
+      annualSalary: 50_000,
+      retirement: { ...noRetirement(), groupRrsp: pct(5), match: { ...noRetirement().match, enabled: true, rate: 100 } },
+    });
+    const a = calculate(base);
+    const b = calculate(matched);
+    expect(b.retirement.annual.employerMatch).toBeCloseTo(2_500, 0);
+    expect(b.employmentIncome - a.employmentIncome).toBeCloseTo(2_500, 0);
+    expect(b.annual.taxableIncome).toBeLessThan(a.annual.taxableIncome); // only the enhanced-CPP deduction moves
+    expect(Math.abs(b.annual.totalIncomeTax - a.annual.totalIncomeTax)).toBeLessThan(50);
+    expect(b.annual.cpp1 - a.annual.cpp1).toBeCloseTo(2_500 * 0.0595, 0);
+    expect(b.annual.ei - a.annual.ei).toBeCloseTo(2_500 * 0.0163, 0);
+    // The match is not cash.
+    expect(b.payroll.totals.netCash).toBeLessThan(a.payroll.totals.netCash);
+  });
+
+  it('does not touch tax, CPP or EI when the match goes into a DPSP', () => {
+    const base = calcInput({ annualSalary: 50_000, retirement: { ...noRetirement(), groupRrsp: pct(5) } });
+    const dpsp = calcInput({
+      annualSalary: 50_000,
+      retirement: {
+        ...noRetirement(),
+        groupRrsp: pct(5),
+        match: { ...noRetirement().match, enabled: true, rate: 100, plan: 'dpsp' },
+      },
+    });
+    const a = calculate(base);
+    const b = calculate(dpsp);
+    expect(b.annual.totalIncomeTax).toBe(a.annual.totalIncomeTax);
+    expect(b.annual.cpp1).toBe(a.annual.cpp1);
+    expect(b.payroll.totals.netCash).toBe(a.payroll.totals.netCash);
+    expect(b.retirement.annual.employerMatch).toBeCloseTo(2_500, 0);
+  });
+
+  it('reduces taxable income by employee RPP / RRSP contributions', () => {
+    const a = calculate(calcInput({ annualSalary: 100_000 }));
+    const b = calculate(calcInput({ annualSalary: 100_000, retirement: { ...noRetirement(), rpp: pct(5) } }));
+    expect(a.annual.taxableIncome - b.annual.taxableIncome).toBeCloseTo(5_000, 0);
+    expect(Math.abs(b.refund)).toBeLessThan(150);
   });
 });

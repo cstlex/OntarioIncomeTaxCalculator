@@ -51,6 +51,15 @@ export interface PerPayDeductions {
   taxableBenefits: number;
   /** After-tax deductions: benefit premiums, ESPP, charity, parking, etc. */
   postTax: number;
+  /**
+   * Employer contribution to your group RRSP. A taxable benefit (pensionable; insurable unless
+   * withdrawals are restricted) that is offset by the matching RRSP deduction, so income tax is
+   * unchanged but CPP (and usually EI) is charged on it. Employer DPSP / RPP contributions are
+   * not taxable and should not be entered here.
+   */
+  employerRrsp?: number;
+  /** Whether the employer group-RRSP contribution is insurable earnings (default true). */
+  employerRrspInsurable?: boolean;
 }
 
 export interface PayrollInput {
@@ -80,6 +89,8 @@ export interface PayPeriod {
   bonus: number;
   rsu: number;
   taxableBenefits: number;
+  /** Employer group-RRSP contribution (non-cash taxable benefit). */
+  employerRrsp: number;
   cpp: number;
   cpp2: number;
   ei: number;
@@ -121,6 +132,7 @@ export interface PayrollResult {
     bonus: number;
     rsu: number;
     taxableBenefits: number;
+    employerRrsp: number;
     cpp: number;
     cpp2: number;
     ei: number;
@@ -263,6 +275,9 @@ export function simulatePayroll(input: PayrollInput, config: TaxYearConfig): Pay
   const preTax = Math.max(0, pp.rpp) + Math.max(0, pp.groupRrsp) + Math.max(0, pp.unionDues);
   const benefits = Math.max(0, pp.taxableBenefits);
   const postTax = Math.max(0, pp.postTax);
+  const employerRrsp = Math.max(0, pp.employerRrsp ?? 0);
+  const employerRrspInsurable = pp.employerRrspInsurable ?? true;
+  const employerInsurable = employerRrspInsurable ? employerRrsp : 0;
 
   // Group lump sums by paycheck.
   const lumpsByPeriod = new Map<number, { bonus: number; rsu: number }>();
@@ -276,12 +291,12 @@ export function simulatePayroll(input: PayrollInput, config: TaxYearConfig): Pay
 
   // Regular-pay contribution estimates used for the K2/K2P credits (T4127 annualizes
   // the period's contribution; once a maximum is reached the maximum is used).
-  const regularPensionable = regularGross + benefits;
+  const regularPensionable = regularGross + benefits + employerRrsp;
   const cppBaseEstimate = Math.min(
     max.cppBaseMax,
     P * Math.max(0, regularPensionable - exemptionPerPeriod) * cppCfg.baseRate,
   );
-  const eiEstimate = Math.min(max.eiMax, P * regularGross * eiCfg.rate);
+  const eiEstimate = Math.min(max.eiMax, P * (regularGross + employerInsurable) * eiCfg.rate);
 
   const ytd = { pensionable: 0, insurable: 0, cpp: 0, cpp2: 0, ei: 0, lumpNet: 0 };
   const periods: PayPeriod[] = [];
@@ -292,8 +307,8 @@ export function simulatePayroll(input: PayrollInput, config: TaxYearConfig): Pay
     const lumps = lumpsByPeriod.get(i) ?? { bonus: 0, rsu: 0 };
     const bonus = round2(lumps.bonus);
     const rsu = round2(lumps.rsu);
-    const pensionable = regularGross + benefits + bonus + rsu;
-    const insurable = regularGross + bonus + (input.rsuSubjectToEi ? rsu : 0);
+    const pensionable = regularGross + benefits + employerRrsp + bonus + rsu;
+    const insurable = regularGross + employerInsurable + bonus + (input.rsuSubjectToEi ? rsu : 0);
     const periodEvents: PayrollEvent[] = [];
     const date = dates[i];
 
@@ -337,7 +352,8 @@ export function simulatePayroll(input: PayrollInput, config: TaxYearConfig): Pay
       ei: ytdEiAfter >= max.eiMax ? max.eiMax : eiEstimate,
     };
 
-    const A = Math.max(0, P * (regularGross + benefits - preTax - F5A));
+    // The employer RRSP contribution is income (I) and an RRSP deduction (F) at the same time.
+    const A = Math.max(0, P * (regularGross + benefits + employerRrsp - preTax - employerRrsp - F5A));
     const regularAnnual = annualizedWithholding(A, credits, config);
     const regularTax = splitScale(regularAnnual, 1 / P);
 
@@ -395,6 +411,7 @@ export function simulatePayroll(input: PayrollInput, config: TaxYearConfig): Pay
       bonus,
       rsu,
       taxableBenefits: benefits,
+      employerRrsp,
       cpp,
       cpp2,
       ei,
@@ -428,6 +445,7 @@ export function simulatePayroll(input: PayrollInput, config: TaxYearConfig): Pay
       bonus: sum((p) => p.bonus),
       rsu: sum((p) => p.rsu),
       taxableBenefits: sum((p) => p.taxableBenefits),
+      employerRrsp: sum((p) => p.employerRrsp),
       cpp: sum((p) => p.cpp),
       cpp2: sum((p) => p.cpp2),
       ei: sum((p) => p.ei),
