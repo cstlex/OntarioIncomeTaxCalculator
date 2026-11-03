@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --color-brand-50: #fdf2f1;
+  --color-brand-100: #fbe1de;
+  --color-brand-500: #d52b1e;
+  --color-brand-600: #b82418;
+  --color-brand-700: #9e1b14;
+}
+
+/* Chart series colours (validated categorical palette, light + dark steps). */
+:root {
+  color-scheme: light;
+  --series-net: #2a78d6;
+  --series-tax: #eb6834;
+  --series-cpp: #1baf7a;
+  --series-cpp2: #eda100;
+  --series-ei: #e87ba4;
+  --series-other: #008300;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --series-net: #3987e5;
+    --series-tax: #d95926;
+    --series-cpp: #199e70;
+    --series-cpp2: #c98500;
+    --series-ei: #d55181;
+    --series-other: #008300;
+  }
+}
+
+body {
+  @apply bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
