@@ -79,9 +79,3 @@ dependencies; all yearly rates live in `src/tax/config.ts`.
 ## Deployment
 
 Pushing to `master` runs `.github/workflows/deploy.yml`, which tests, builds and deploys `dist/` to GitHub Pages.
-
-One-time repository setup:
-
-1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-2. **Settings → Pages → Custom domain:** `tax.minsookim.dev`, then tick **Enforce HTTPS** once the certificate is issued.
-3. DNS at the domain's provider: a `CNAME` record for `tax` pointing to `cstlex.github.io`.
