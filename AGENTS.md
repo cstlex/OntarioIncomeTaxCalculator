@@ -47,11 +47,13 @@ src/
     calculator.ts      Combines payroll + annual: refund/owing, RSU analysis, paycheck phases,
                        retirement contributions ($ or % of salary, employer match into group RRSP or DPSP)
     tax.test.ts        Tests with hand-checked expected values
-  components/          UI (Card, inputs, summary, phases, chart, RSU panel, breakdown, table)
+  components/          UI (Card, inputs, summary, phases, chart, RSU panel, breakdown, table, FAQ)
+  entry-server.tsx     Build-time render of the app (default inputs) for prerendering
   state.ts             Defaults + localStorage persistence
   format.ts            Currency / percent / date formatting
 public/                Static files copied as-is: favicons, manifest, og-image, CNAME
 scripts/generate-icons.mjs   Icon generator (sharp); output is committed
+scripts/prerender.mjs        Injects the server-rendered HTML into dist/index.html (part of `npm run build`)
 .github/workflows/deploy.yml Build, test and deploy to GitHub Pages
 ```
 
@@ -99,6 +101,17 @@ scripts/generate-icons.mjs   Icon generator (sharp); output is committed
   order — keep the order, don't cycle colours). The chart must keep its legend and the table view.
 - Asset URLs must stay relative (`base: './'` in `vite.config.ts`) so the build works on both the custom
   domain and `https://cstlex.github.io/OntarioIncomeTaxCalculator/`.
+
+## SEO
+
+- `npm run build` prerenders the app with default inputs into `dist/index.html`, so crawlers and link
+  previews see real content; the browser then renders from scratch with `createRoot` (no hydration, because
+  saved inputs differ from the defaults). Keep components safe to render in Node: no `window`, `document` or
+  `localStorage` access during render (effects and try/catch are fine).
+- The FAQ (`src/components/Faq.tsx`) is indexable content; its numbers come from `config.ts`.
+- When the default tax year changes, update the year in the `<title>` / `og:title` in `index.html` and
+  `<lastmod>` in `public/sitemap.xml`.
+- Canonical URL: `https://tax.minsookim.dev/` (`index.html`, `public/sitemap.xml`, `public/robots.txt`).
 
 ## Deployment
 

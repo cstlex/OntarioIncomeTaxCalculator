@@ -10,6 +10,7 @@ import { PaycheckChart } from './components/PaycheckChart';
 import { RsuPanel } from './components/RsuPanel';
 import { AnnualBreakdown } from './components/AnnualBreakdown';
 import { PaycheckTable } from './components/PaycheckTable';
+import { Faq } from './components/Faq';
 
 function Logo() {
   return (
@@ -63,6 +64,7 @@ export default function App() {
           <RsuPanel result={result} />
           <AnnualBreakdown result={result} />
           <PaycheckTable payroll={result.payroll} />
+          <Faq config={config} />
         </div>
       </main>
 
