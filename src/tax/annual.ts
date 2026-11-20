@@ -124,8 +124,8 @@ export function computeAnnualTax(input: AnnualInput, config: TaxYearConfig): Ann
   const { cpp } = config;
   const { employmentIncome, cpp1, cpp2, ei, otherDeductions } = input;
 
-  // CPP enhanced contributions (first additional 1% of the 5.95% plus all of CPP2)
-  // are a deduction from income; the base 4.95% portion is a credit.
+  // CPP enhanced contributions (the first additional 1% of the CPP rate plus all
+  // of CPP2) are a deduction from income; the base portion is a credit.
   const cppEnhanced = cpp1 * ((cpp.rate - cpp.baseRate) / cpp.rate);
   const cppBase = cpp1 - cppEnhanced;
   const enhancedCppDeduction = cppEnhanced + cpp2;

@@ -2,11 +2,11 @@
  * Paycheck-by-paycheck payroll simulation for an Ontario employee, following the
  * CRA "Payroll Deductions Formulas" (T4127) method:
  *
- * - CPP: 5.95% of pensionable earnings above the per-period share of the $3,500
- *   basic exemption, until the annual maximum is reached.
+ * - CPP: the CPP rate (5.95% in 2026, 5.75% in 2027) of pensionable earnings above
+ *   the per-period share of the $3,500 basic exemption, until the annual maximum.
  * - CPP2: 4% of pensionable earnings between YMPE and YAMPE, which only starts
  *   once year-to-date pensionable earnings pass the YMPE.
- * - EI: 1.63% of insurable earnings until the maximum insurable earnings.
+ * - EI: the EI rate of insurable earnings until the maximum insurable earnings.
  * - Income tax: the period's income is annualized (× pay periods), taxed with the
  *   annual formula, then divided back. Non-periodic payments (bonuses, RSU vests)
  *   use the CRA bonus method (tax on income with the payment minus tax without).

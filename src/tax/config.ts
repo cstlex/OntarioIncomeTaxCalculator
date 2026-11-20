@@ -122,8 +122,60 @@ export const TAX_2026: TaxYearConfig = {
   },
 };
 
+/**
+ * 2027 (T4127 124th edition, effective January 1, 2027).
+ * Federal indexation 2.6%, Ontario 2.1%. The base CPP rate drops from 4.95% to
+ * 4.75% (total employee rate 5.75%); the first additional 1% is unchanged.
+ */
+export const TAX_2027: TaxYearConfig = {
+  year: 2027,
+  federal: {
+    brackets: [
+      { upTo: 60_044, rate: 0.14 },
+      { upTo: 120_088, rate: 0.205 },
+      { upTo: 186_157, rate: 0.26 },
+      { upTo: 265_203, rate: 0.29 },
+      { upTo: Infinity, rate: 0.33 },
+    ],
+    creditRate: 0.14,
+    bpaMax: 16_879,
+    bpaMin: 15_215,
+    bpaPhaseOutStart: 186_157,
+    bpaPhaseOutEnd: 265_203,
+    canadaEmploymentAmount: 1_540,
+  },
+  ontario: {
+    brackets: [
+      { upTo: 55_023, rate: 0.0505 },
+      { upTo: 110_049, rate: 0.0915 },
+      { upTo: 150_000, rate: 0.1116 },
+      { upTo: 220_000, rate: 0.1216 },
+      { upTo: Infinity, rate: 0.1316 },
+    ],
+    creditRate: 0.0505,
+    bpa: 13_261,
+    surtax: { threshold1: 5_940, rate1: 0.2, threshold2: 7_603, rate2: 0.36 },
+    taxReductionBasic: 306,
+    lift: { rate: 0.0505, max: 875, phaseOutStart: 32_500, phaseOutRate: 0.05 },
+    healthPremium: ONTARIO_HEALTH_PREMIUM,
+  },
+  cpp: {
+    rate: 0.0575,
+    baseRate: 0.0475,
+    ympe: 76_700,
+    basicExemption: 3_500,
+    yampe: 87_400,
+    cpp2Rate: 0.04,
+  },
+  ei: {
+    rate: 0.0164,
+    maxInsurableEarnings: 70_800,
+  },
+};
+
 export const TAX_YEARS: Record<number, TaxYearConfig> = {
   2026: TAX_2026,
+  2027: TAX_2027,
 };
 
 export const SUPPORTED_YEARS = Object.keys(TAX_YEARS)

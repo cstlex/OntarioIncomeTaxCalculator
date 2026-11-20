@@ -80,9 +80,9 @@ scripts/prerender.mjs        Injects the server-rendered HTML into dist/index.ht
   refundable credits (e.g. Canada Workers Benefit).
 - Run `npm test` after any engine change and add a test for any new rule.
 
-## Tax data sources (2026)
+## Tax data sources
 
-- CRA T4127 Payroll Deductions Formulas, 122nd edition (Jan 1, 2026):
+- CRA T4127 Payroll Deductions Formulas: 122nd edition (Jan 1, 2026) and 124th edition (Jan 1, 2027):
   https://www.canada.ca/en/revenue-agency/services/forms-publications/payroll/t4127-payroll-deductions-formulas.html
 - CPP 2026: YMPE $74,600, YAMPE $85,000, 5.95% / 4%, max $4,230.45 / $416.
 - EI 2026: 1.63%, maximum insurable earnings $68,900, max premium $1,123.07.
@@ -91,6 +91,13 @@ scripts/prerender.mjs        Injects the server-rendered HTML into dist/index.ht
 - Ontario 2026 (indexation 1.9%): 5.05% / 9.15% / 11.16% / 12.16% / 13.16% at $53,891 / $107,785 / $150,000 /
   $220,000; BPA $12,989; surtax 20% over $5,818 and 36% over $7,446; tax reduction $300; LIFT max $875,
   reduced by 5% of net income over $32,500.
+- CPP 2027: YMPE $76,700, YAMPE $87,400, 5.75% (base rate cut from 4.95% to 4.75%; first additional 1% unchanged)
+  / 4%, max $4,209 / $428.
+- EI 2027: 1.64%, maximum insurable earnings $70,800, max premium $1,161.12.
+- Federal 2027 (indexation 2.6%): same rates at $60,044 / $120,088 / $186,157 / $265,203; BPA $16,879 → $15,215;
+  Canada employment amount $1,540.
+- Ontario 2027 (indexation 2.1%): same rates at $55,023 / $110,049 / $150,000 / $220,000; BPA $13,261; surtax 20%
+  over $5,940 and 36% over $7,603; tax reduction $306; LIFT unchanged (max $875, phase-out over $32,500).
 
 ## UI conventions
 

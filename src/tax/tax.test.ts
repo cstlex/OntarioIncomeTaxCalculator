@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TAX_2026, contributionMaximums } from './config';
+import { DEFAULT_YEAR, TAX_2026, TAX_2027, contributionMaximums } from './config';
 import { bracketTax, computeAnnualFromEarnings, federalBpa, ontarioHealthPremium } from './annual';
 import { payDates, simulatePayroll, type PayrollInput } from './payroll';
 import { calculate, resolveRetirement, type CalculatorInput, type RetirementInput } from './calculator';
@@ -59,6 +59,19 @@ describe('2026 contribution maximums', () => {
   });
 });
 
+describe('2027 contribution maximums', () => {
+  it('matches CRA published maximums', () => {
+    const max = contributionMaximums(TAX_2027);
+    expect(max.cppMax).toBe(4209);
+    expect(max.cpp2Max).toBe(428);
+    expect(max.eiMax).toBe(1161.12);
+  });
+
+  it('is the default tax year', () => {
+    expect(DEFAULT_YEAR).toBe(2027);
+  });
+});
+
 describe('annual building blocks', () => {
   it('computes bracket tax', () => {
     expect(bracketTax(58_523, cfg.federal.brackets)).toBeCloseTo(8193.22, 2);
@@ -107,6 +120,40 @@ describe('annual return', () => {
     );
     expect(r.ontario.tax).toBe(0);
     expect(r.ontario.healthPremium).toBe(0);
+  });
+});
+
+describe('annual return 2027', () => {
+  it('computes $100,000 of employment income (hand-checked)', () => {
+    const r = computeAnnualFromEarnings(
+      { employmentIncome: 100_000, insurableEarnings: 100_000, otherDeductions: 0 },
+      TAX_2027,
+    );
+    expect(r.cpp1).toBe(4209);
+    expect(r.cpp2).toBe(428);
+    expect(r.ei).toBe(1161.12);
+    // Enhanced CPP: 4,209 × (1% / 5.75%) = 732, plus CPP2 428.
+    expect(r.enhancedCppDeduction).toBeCloseTo(1160, 2);
+    expect(r.taxableIncome).toBeCloseTo(98_840, 2);
+    // 8,406.16 + 7,953.18 − 14% × (16,879 + 3,477 + 1,161.12 + 1,540)
+    expect(r.federal.tax).toBeCloseTo(13_131.34, 2);
+    // 2,778.66 + 4,009.26 − 5.05% × (13,261 + 3,477 + 1,161.12): below the surtax threshold.
+    expect(r.ontario.basicTax).toBeCloseTo(5_884.01, 2);
+    expect(r.ontario.surtax).toBe(0);
+    expect(r.ontario.healthPremium).toBe(750);
+    expect(r.totalIncomeTax).toBeCloseTo(19_765.35, 2);
+  });
+
+  it('stops 2027 payroll CPP/CPP2/EI exactly at the annual maximums', () => {
+    const r = simulatePayroll(payrollInput({ firstPayDate: '2027-01-01' }), TAX_2027);
+    expect(r.totals.cpp).toBe(4209);
+    expect(r.totals.cpp2).toBe(428);
+    expect(r.totals.ei).toBe(1161.12);
+  });
+
+  it('withholds close to the 2027 annual tax for a steady salary', () => {
+    const res = calculate(calcInput({ year: 2027, firstPayDate: '2027-01-01', annualSalary: 100_000 }));
+    expect(Math.abs(res.refund)).toBeLessThan(150);
   });
 });
 

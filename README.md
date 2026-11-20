@@ -30,25 +30,25 @@ so your net pay changes during the year. RSU vests make it even more lumpy — a
 
 | Part | Method |
 | --- | --- |
-| CPP | 5.95% of pensionable earnings above the per-paycheck share of the $3,500 exemption, up to the yearly maximum |
+| CPP | The CPP rate (5.95% in 2026, 5.75% in 2027) of pensionable earnings above the per-paycheck share of the $3,500 exemption, up to the yearly maximum |
 | CPP2 | 4% of earnings between the YMPE and YAMPE, starting once year-to-date earnings pass the YMPE |
-| EI | 1.63% of insurable earnings up to the yearly maximum |
+| EI | The EI rate (1.63% in 2026, 1.64% in 2027) of insurable earnings up to the yearly maximum |
 | Paycheck income tax | CRA *Payroll Deductions Formulas* (T4127): each paycheck is annualized and taxed with the federal and Ontario formulas (incl. surtax, tax reduction and Ontario Health Premium); bonuses and RSU vests use the bonus method |
 | Annual tax | Federal + Ontario brackets and non-refundable credits, enhanced-CPP deduction, Ontario surtax, tax reduction, LIFT credit and Ontario Health Premium |
 | RSU tax rate | (tax with RSU − tax without RSU) ÷ RSU income |
 
-### 2026 numbers
+### Tax-year numbers
 
-| | 2026 |
-| --- | --- |
-| CPP (YMPE / max) | $74,600 / $4,230.45 |
-| CPP2 (YAMPE / max) | $85,000 / $416.00 |
-| EI (max insurable / max premium) | $68,900 / $1,123.07 |
-| Federal brackets | 14% · 20.5% · 26% · 29% · 33% at $58,523 / $117,045 / $181,440 / $258,482 |
-| Ontario brackets | 5.05% · 9.15% · 11.16% · 12.16% · 13.16% at $53,891 / $107,785 / $150,000 / $220,000 |
+| | 2026 | 2027 |
+| --- | --- | --- |
+| CPP (rate / YMPE / max) | 5.95% / $74,600 / $4,230.45 | 5.75% / $76,700 / $4,209.00 |
+| CPP2 (YAMPE / max) | $85,000 / $416.00 | $87,400 / $428.00 |
+| EI (rate / max insurable / max premium) | 1.63% / $68,900 / $1,123.07 | 1.64% / $70,800 / $1,161.12 |
+| Federal brackets (14% · 20.5% · 26% · 29% · 33%) | $58,523 / $117,045 / $181,440 / $258,482 | $60,044 / $120,088 / $186,157 / $265,203 |
+| Ontario brackets (5.05% · 9.15% · 11.16% · 12.16% · 13.16%) | $53,891 / $107,785 / $150,000 / $220,000 | $55,023 / $110,049 / $150,000 / $220,000 |
 
-Because the EI ceiling ($68,900) is lower than the CPP ceiling ($74,600), **EI is usually maxed first** for salaried
-employees; CPP follows, and CPP2 keeps going until $85,000.
+Because the EI ceiling is lower than the CPP ceiling (2027: $70,800 vs $76,700), **EI is usually maxed first** for
+salaried employees; CPP follows, and CPP2 keeps going until the YAMPE.
 
 ### Assumptions & limitations
 
