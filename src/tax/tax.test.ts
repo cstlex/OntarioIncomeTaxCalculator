@@ -67,6 +67,11 @@ describe('2027 contribution maximums', () => {
     expect(max.eiMax).toBe(1161.12);
   });
 
+  it('phases out the 2027 federal BPA (T4127 BPAF formula)', () => {
+    expect(federalBpa(186_157, TAX_2027)).toBe(16_879);
+    expect(federalBpa(265_203, TAX_2027)).toBe(15_214);
+  });
+
   it('is the default tax year', () => {
     expect(DEFAULT_YEAR).toBe(2027);
   });

@@ -139,7 +139,7 @@ export const TAX_2027: TaxYearConfig = {
     ],
     creditRate: 0.14,
     bpaMax: 16_879,
-    bpaMin: 15_215,
+    bpaMin: 15_214,
     bpaPhaseOutStart: 186_157,
     bpaPhaseOutEnd: 265_203,
     canadaEmploymentAmount: 1_540,

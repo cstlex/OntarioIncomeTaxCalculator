@@ -94,7 +94,7 @@ scripts/prerender.mjs        Injects the server-rendered HTML into dist/index.ht
 - CPP 2027: YMPE $76,700, YAMPE $87,400, 5.75% (base rate cut from 4.95% to 4.75%; first additional 1% unchanged)
   / 4%, max $4,209 / $428.
 - EI 2027: 1.64%, maximum insurable earnings $70,800, max premium $1,161.12.
-- Federal 2027 (indexation 2.6%): same rates at $60,044 / $120,088 / $186,157 / $265,203; BPA $16,879 → $15,215;
+- Federal 2027 (indexation 2.6%): same rates at $60,044 / $120,088 / $186,157 / $265,203; BPA $16,879 → $15,214;
   Canada employment amount $1,540.
 - Ontario 2027 (indexation 2.1%): same rates at $55,023 / $110,049 / $150,000 / $220,000; BPA $13,261; surtax 20%
   over $5,940 and 36% over $7,603; tax reduction $306; LIFT unchanged (max $875, phase-out over $32,500).
