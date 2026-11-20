@@ -156,7 +156,9 @@ export function DateInput({
       id={id}
       aria-label={ariaLabel}
       type="date"
-      className={inputClass}
+      // iOS Safari gives date inputs an intrinsic min-width and centres the value,
+      // which makes them overflow narrow containers.
+      className={`${inputClass} min-w-0 appearance-none [&::-webkit-date-and-time-value]:text-left`}
       value={value}
       min={min}
       max={max}

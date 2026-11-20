@@ -51,32 +51,41 @@ function LumpList({
   const update = (id: string, patch: Partial<{ date: string; amount: number }>) =>
     onChange(items.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   return (
-    <div className="flex flex-col gap-2">
+    <div className="@container flex flex-col gap-2">
       {items.length === 0 && <p className="text-sm text-zinc-500 dark:text-zinc-400">None added.</p>}
-      {items.map((it, i) => (
-        <div key={it.id} className="flex items-center gap-2">
-          <div className="w-[9.5rem] shrink-0">
-            <DateInput
-              ariaLabel={`${label} ${i + 1} date`}
-              value={it.date}
-              min={`${year}-01-01`}
-              max={`${year}-12-31`}
-              onChange={(date) => update(it.id, { date })}
-            />
+      {/* Narrow cards (phones, the lg sidebar): date + remove on one line, amount below.
+          Wide cards: date | amount | remove on one line. */}
+      <div className="flex flex-col divide-y divide-zinc-200 @min-[23rem]:gap-2 @min-[23rem]:divide-y-0 dark:divide-zinc-800">
+        {items.map((it, i) => (
+          <div
+            key={it.id}
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1.5 py-2 first:pt-0 @min-[23rem]:grid-cols-[9.5rem_minmax(0,1fr)_auto] @min-[23rem]:py-0"
+          >
+            <div className="min-w-0">
+              <DateInput
+                ariaLabel={`${label} ${i + 1} date`}
+                value={it.date}
+                min={`${year}-01-01`}
+                max={`${year}-12-31`}
+                onChange={(date) => update(it.id, { date })}
+              />
+            </div>
+            <div className="col-span-2 row-start-2 min-w-0 @min-[23rem]:col-span-1 @min-[23rem]:col-start-2 @min-[23rem]:row-start-1">
+              <MoneyInput
+                ariaLabel={`${label} ${i + 1} amount (${currency})`}
+                value={it.amount}
+                onChange={(amount) => update(it.id, { amount })}
+                suffix={currency}
+              />
+            </div>
+            <div className="col-start-2 row-start-1 @min-[23rem]:col-start-3">
+              <IconButton label={`Remove ${label.toLowerCase()} ${i + 1}`} onClick={() => onChange(items.filter((x) => x.id !== it.id))}>
+                <TrashIcon />
+              </IconButton>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <MoneyInput
-              ariaLabel={`${label} ${i + 1} amount (${currency})`}
-              value={it.amount}
-              onChange={(amount) => update(it.id, { amount })}
-              suffix={currency}
-            />
-          </div>
-          <IconButton label={`Remove ${label.toLowerCase()} ${i + 1}`} onClick={() => onChange(items.filter((x) => x.id !== it.id))}>
-            <TrashIcon />
-          </IconButton>
-        </div>
-      ))}
+        ))}
+      </div>
       <button
         type="button"
         onClick={() => {
